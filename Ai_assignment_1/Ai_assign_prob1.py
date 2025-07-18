@@ -46,18 +46,15 @@ class state:
         path = []
         path_map = {}
 
-    # Build a dictionary to map each node to its parent
         for node, parent in closed:
             path_map[node] = parent
-
-    # Start from goal node and go backward using parent references
         node = goal_node_pair[0]
 
         while node is not None:
             path.append(node)
-            node = path_map.get(node)  # safely get parent or None if not found
+            node = path_map.get(node) 
 
-        path.reverse()  # reverse the path to get start -> goal
+        path.reverse()  
         return path
     
     def __str__(self):
