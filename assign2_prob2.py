@@ -2,9 +2,9 @@ import heapq
 
 class State:
     def __init__(self, loc, parent=None, cost=0):
-        self.loc = loc              # (row, col)
-        self.parent = parent        # parent State
-        self.cost = cost            # g(n): path cost so far
+        self.loc = loc             
+        self.parent = parent        
+        self.cost = cost            
 
     def __eq__(self, other):
         return isinstance(other, State) and self.loc == other.loc
@@ -26,7 +26,7 @@ class Problem:
         self.cols = len(grid[0])
 
     def get_children(self, state):
-        directions = [(0,1),(1,0),(0,-1),(-1,0)]
+        directions = [(0,1),(1,0),(0,-1),(-1,0),(-1,-1),(-1,1),(1,-1),(1,1)]
         children = []
         for d in directions:
             new_r = state.loc[0] + d[0]
@@ -38,7 +38,6 @@ class Problem:
         return children
 
     def heuristic(self, state):
-        # Manhattan distance
         return abs(state.loc[0] - self.goal[0]) + abs(state.loc[1] - self.goal[1])
 
     def a_star_search(self):
