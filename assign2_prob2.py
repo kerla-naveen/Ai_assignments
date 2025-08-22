@@ -1,79 +1,67 @@
-import heapq
-
 class State:
-    def __init__(self, loc, parent=None, cost=0):
-        self.loc = loc             
-        self.parent = parent        
-        self.cost = cost            
+    def __init__(self, position):
+        self.position = position 
 
     def __eq__(self, other):
-        return isinstance(other, State) and self.loc == other.loc
+        return isinstance(other, State) and self.position == other.position
 
     def __hash__(self):
-        return hash(self.loc)
+        return hash(self.position)
 
-    def __lt__(self, other):
-        # needed for heapq if f(n) tie
-        return self.cost < other.cost
+    def __str__(self):
+        return f"State({self.position})"
 
+def a_star(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
 
-class Problem:
-    def __init__(self, grid, start, goal):
-        self.grid = grid
-        self.start = start
-        self.goal = goal
-        self.rows = len(grid)
-        self.cols = len(grid[0])
+    open = set()
+    closed = set()
 
-    def get_children(self, state):
+    M = State(start) 
+    goal_state = State(goal)
+
+    open.add(M)
+
+    g = {M: 0}  
+    h = {M: abs(start[0]-goal[0]) + abs(start[1]-goal[1])}  
+    f = {M: g[M] + h[M]}  # Total cost
+    parent = {M: None}
+
+    while open:
+        # Select node M with lowest f
+        M = min(open, key=lambda x: f[x])
+
+        if M == goal_state:
+            # Reconstruct path
+            path = []
+            while M:
+                path.append(M.position)
+                M = parent[M]
+            path.reverse()
+            return path, g[goal_state] 
+        open.remove(M)
+        closed.add(M)
+
+        # Explore neighbors
         directions = [(0,1),(1,0),(0,-1),(-1,0),(-1,-1),(-1,1),(1,-1),(1,1)]
-        children = []
-        for d in directions:
-            new_r = state.loc[0] + d[0]
-            new_c = state.loc[1] + d[1]
-            if 0 <= new_r < self.rows and 0 <= new_c < self.cols:
-                if self.grid[new_r][new_c] != 1:  
-                    child = State((new_r,new_c), parent=state, cost=state.cost+1)
-                    children.append(child)
-        return children
+        for dr, dc in directions:
+            new_r, new_c = M.position[0] + dr, M.position[1] + dc
+            if 0 <= new_r < rows and 0 <= new_c < cols and grid[new_r][new_c] != 1:
+                N = State((new_r, new_c))
 
-    def heuristic(self, state):
-        return abs(state.loc[0] - self.goal[0]) + abs(state.loc[1] - self.goal[1])
+                if N in closed:
+                    continue
 
-    def a_star_search(self):
-        start_state = State(self.start, cost=0)
-        frontier = []
-        heapq.heappush(frontier, (self.heuristic(start_state), start_state))
-        visited = set()
+                tentative_g = g[M] + 1
 
-        while frontier:
-            f, current = heapq.heappop(frontier)
+                if N not in open or tentative_g < g.get(N, float("inf")):
+                    parent[N] = M
+                    g[N] = tentative_g
+                    h[N] = abs(new_r - goal[0]) + abs(new_c - goal[1])
+                    f[N] = g[N] + h[N]
+                    open.add(N)
 
-            if current.loc == self.goal:
-                return self.reconstruct_path(current)
-
-            if current in visited:
-                continue
-            visited.add(current)
-
-            for child in self.get_children(current):
-                if child not in visited:
-                    g = child.cost
-                    h = self.heuristic(child)
-                    f = g + h
-                    heapq.heappush(frontier, (f, child))
-
-        return None  # no path
-
-    def reconstruct_path(self, state):
-        path = []
-        while state:
-            path.append(state.loc)
-            state = state.parent
-        path.reverse()
-        return path
-
-
+    return None, -1  
 
 grid = [
     [0,0,0,1,0],
@@ -85,11 +73,11 @@ grid = [
 start = (0,0)
 goal = (4,4)
 
-problem = Problem(grid, start, goal)
-path = problem.a_star_search()
-
+path, cost = a_star(grid, start, goal)
 if path:
     print("Path:", path)
+    print("Path cost:", cost)
     print("Path length:", len(path)-1)
 else:
     print("No path found, length = -1")
+
